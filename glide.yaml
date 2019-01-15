@@ -1,0 +1,31 @@
+package: github.com/lrx0014/log-tools
+import:
+- package: github.com/golang/glog
+- package: github.com/gorilla/mux
+  version: ^1.6.2
+- package: github.com/heptiolabs/healthcheck
+- package: github.com/spf13/cobra
+  version: ^0.0.3
+- package: github.com/spf13/pflag
+  version: ^1.0.3
+- package: github.com/unrolled/render
+- package: github.com/urfave/negroni
+  version: ^1.0.0
+- package: k8s.io/apimachinery
+  subpackages:
+  - pkg/util/errors
+  - pkg/version
+- package: k8s.io/apiserver
+  subpackages:
+  - pkg/server
+  - pkg/util/logs
+- package: k8s.io/client-go
+  version: ^10.0.0
+  subpackages:
+  - kubernetes
+  - rest
+  - tools/clientcmd
+  - tools/clientcmd/api
+- package: k8s.io/kube-aggregator
+  subpackages:
+  - pkg/client/clientset_generated/clientset
