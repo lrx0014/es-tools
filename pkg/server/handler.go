@@ -30,9 +30,8 @@ func bind(request *http.Request, obj interface{}) error {
 	return decoder.Decode(obj)
 }
 
-/*
-func (s *APIServer) listCatalog(w http.ResponseWriter, request *http.Request) {
-	catalogList, err := s.CatalogManager.ListCatalog()
+func (s *APIServer) getLogs(w http.ResponseWriter, request *http.Request) {
+	//catalogList, err := s.logs.GetLogDetails()
 	if err != nil {
 		message := fmt.Sprintf("can not fetch all catalogs: %v", err)
 		glog.Error(message)
@@ -41,4 +40,3 @@ func (s *APIServer) listCatalog(w http.ResponseWriter, request *http.Request) {
 	}
 	renderer.JSON(w, http.StatusOK, catalogList)
 }
-*/

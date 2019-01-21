@@ -10,11 +10,13 @@ import (
 	"github.com/urfave/negroni"
 
 	"github.com/lrx0014/log-tools/cmd/apiserver/app/options"
+	"github.com/lrx0014/log-tools/pkg/log"
 )
 
 // APIServer is a http.Handler which exposes catalog aggregator functionality over HTTP.
 type APIServer struct {
-	cfg *options.ServerRunOptions
+	cfg  *options.ServerRunOptions
+	logs *log.LogService
 }
 
 func NewAPIServer(cfg *options.ServerRunOptions) (*APIServer, error) {
