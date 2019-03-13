@@ -10,13 +10,11 @@ import (
 	"github.com/urfave/negroni"
 
 	"github.com/lrx0014/log-tools/cmd/apiserver/app/options"
-	"github.com/lrx0014/log-tools/pkg/log"
 )
 
 // APIServer is a http.Handler which exposes catalog aggregator functionality over HTTP.
 type APIServer struct {
-	cfg  *options.ServerRunOptions
-	logs *log.LogService
+	cfg *options.ServerRunOptions
 }
 
 func NewAPIServer(cfg *options.ServerRunOptions) (*APIServer, error) {
@@ -44,12 +42,9 @@ func (s *APIServer) setupRoutes() http.Handler {
 	r.Handle("/ready", health)
 
 	// Routes
-	// apiv1 := r.PathPrefix("/v1").Subrouter()
+	apiv1 := r.PathPrefix("/v1").Subrouter()
 
-	/*
-		apiv1.Methods("GET").Path("/catalogs").HandlerFunc(s.listCatalog)
-		apiv1.Methods("GET").Path("/catalogs/{catalog}").Handler(WithParams(s.getCatalog))
-	*/
+	apiv1.Methods("GET").Path("/namespace/{namespace}/pod/{pod}/container/{container}/log").Handler(WithParams(s.getLogs))
 
 	n := negroni.Classic()
 	n.UseHandler(r)

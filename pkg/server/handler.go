@@ -2,9 +2,14 @@ package server
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
+	"github.com/kubeapps/common/response"
+	"k8s.io/klog/glog"
+
 	"github.com/gorilla/mux"
+	"github.com/lrx0014/log-tools/pkg/log"
 	"github.com/unrolled/render"
 )
 
@@ -30,13 +35,23 @@ func bind(request *http.Request, obj interface{}) error {
 	return decoder.Decode(obj)
 }
 
-func (s *APIServer) getLogs(w http.ResponseWriter, request *http.Request) {
-	//catalogList, err := s.logs.GetLogDetails()
+func (s *APIServer) getLogs(w http.ResponseWriter, request *http.Request, params Params) {
+	namespace := params["namespace"]
+	podID := params["pod"]
+	container := params["container"]
+	client, err := log.CreateClient()
 	if err != nil {
-		message := fmt.Sprintf("can not fetch all catalogs: %v", err)
+		message := fmt.Sprintf("Unable to create k8s client... => %v\n", err)
 		glog.Error(message)
 		response.NewErrorResponse(http.StatusInternalServerError, message).Write(w)
 		return
 	}
-	renderer.JSON(w, http.StatusOK, catalogList)
+	result, err := log.GetLogs(client, namespace, podID, container)
+	if err != nil {
+		message := fmt.Sprintf("Unable to get log... => %v\n", err)
+		glog.Error(message)
+		response.NewErrorResponse(http.StatusInternalServerError, message).Write(w)
+		return
+	}
+	renderer.JSON(w, http.StatusOK, result)
 }
