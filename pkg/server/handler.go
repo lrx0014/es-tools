@@ -3,6 +3,7 @@ package server
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 
 	"github.com/kubeapps/common/response"
@@ -47,11 +48,12 @@ func (s *APIServer) getLogs(w http.ResponseWriter, request *http.Request, params
 		return
 	}
 	result, err := log.GetLogs(client, namespace, podID, container)
+	r, _ := ioutil.ReadAll(result)
 	if err != nil {
 		message := fmt.Sprintf("Unable to get log... => %v\n", err)
 		glog.Error(message)
 		response.NewErrorResponse(http.StatusInternalServerError, message).Write(w)
 		return
 	}
-	renderer.JSON(w, http.StatusOK, result)
+	renderer.JSON(w, http.StatusOK, r)
 }
