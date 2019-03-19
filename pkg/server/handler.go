@@ -3,10 +3,10 @@ package server
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
-	"time"
 
-	debug "log"
+	"github.com/golang/glog"
 
 	"github.com/kubeapps/common/response"
 
@@ -44,14 +44,14 @@ func (s *APIServer) getLogs(w http.ResponseWriter, request *http.Request, params
 	client, err := log.CreateClient()
 	if err != nil {
 		message := fmt.Sprintf("Unable to create k8s client... => %v\n", err)
-		debug.Println(message)
+		glog.Errorln(message)
 		response.NewErrorResponse(http.StatusInternalServerError, message).Write(w)
 		return
 	}
 	result, err := log.GetLogs(client, namespace, podID, container)
 	if err != nil {
 		message := fmt.Sprintf("Unable to get log... => %v\n", err)
-		debug.Println(message)
+		glog.Errorln(message)
 		response.NewErrorResponse(http.StatusInternalServerError, message).Write(w)
 		return
 	}
@@ -65,7 +65,7 @@ func (s *APIServer) streamLogs(w http.ResponseWriter, request *http.Request, par
 	client, err := log.CreateClient()
 	if err != nil {
 		message := fmt.Sprintf("Unable to create k8s client... => %v\n", err)
-		debug.Println(message)
+		glog.Errorln(message)
 		response.NewErrorResponse(http.StatusInternalServerError, message).Write(w)
 		return
 	}
@@ -84,7 +84,7 @@ func (s *APIServer) streamLogs(w http.ResponseWriter, request *http.Request, par
 	content, err := log.StreamLogs(client, namespace, podID, container)
 	if err != nil {
 		message := fmt.Sprintf("Unable to get log... => %v\n", err)
-		debug.Println(message)
+		glog.Errorln(message)
 		response.NewErrorResponse(http.StatusInternalServerError, message).Write(w)
 		return
 	}
@@ -99,31 +99,25 @@ func (s *APIServer) streamLogs(w http.ResponseWriter, request *http.Request, par
 	for {
 		select {
 		case <-cn.CloseNotify():
-			debug.Println("Client stopped listening")
+			glog.Infoln("Client stopped listening")
 			return
 		default:
-			/*
-				result, err := ioutil.ReadAll(content)
-				if err != nil {
-					message := fmt.Sprintf("Unable to read all logs: %v", err)
-					response.NewErrorResponse(http.StatusInternalServerError, message).Write(w)
-					return
-				}
-				debug.Printf("log: %s\n", string(result))
-			*/
-			time.Sleep(2 * time.Second)
 			// Send some data.
-			var buf []byte
+			buf := make([]byte, 2048)
 			n, err := content.Read(buf)
-			if err != nil {
+			if err != nil && err != io.EOF {
 				message := fmt.Sprintf("Unable to stream logs: %v", err)
 				response.NewErrorResponse(http.StatusInternalServerError, message).Write(w)
 				return
 			}
 
-			debug.Printf("Sending some data: %d", n)
+			if err == io.EOF {
+				break
+			}
 
-			w.Write(buf)
+			glog.Infof("Sending some data: %s", string(buf[:n]))
+
+			w.Write(buf[:n])
 
 			flusher.Flush()
 		}

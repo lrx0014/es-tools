@@ -88,7 +88,7 @@ func PrintAndExitIfRequested() {
 		fmt.Printf("%#v\n", version.Get())
 		os.Exit(0)
 	} else if *versionFlag == VersionTrue {
-		fmt.Printf("Service Catalog Aggregator %s\n", version.Get())
+		fmt.Printf("log-tools %s\n", version.Get())
 		os.Exit(0)
 	}
 }

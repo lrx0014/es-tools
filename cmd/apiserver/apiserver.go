@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"math/rand"
 	"os"
@@ -19,6 +20,8 @@ func main() {
 
 	logs.InitLogs()
 	defer logs.FlushLogs()
+
+	flag.CommandLine.Parse([]string{})
 
 	if err := command.Execute(); err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)

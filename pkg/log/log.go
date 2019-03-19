@@ -83,7 +83,7 @@ func GetLogs(client kubernetes.Interface, namespace string, podID string, contai
 func StreamLogs(client kubernetes.Interface, namespace string, podID string, container string) (io.ReadCloser, error) {
 	logOptions := &v1.PodLogOptions{
 		Container:  container,
-		Follow:     false,
+		Follow:     true,
 		Timestamps: false,
 	}
 	readCloser, err := openStream(client, namespace, podID, logOptions)
