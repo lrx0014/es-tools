@@ -3,6 +3,7 @@ package log
 import (
 	"encoding/json"
 	"io"
+	"io/ioutil"
 
 	v1 "k8s.io/api/core/v1"
 
@@ -57,12 +58,39 @@ func openStream(client kubernetes.Interface, namespace, podID string, logOptions
 		VersionedParams(logOptions, scheme.ParameterCodec).Stream()
 }
 
-func GetLogs(client kubernetes.Interface, namespace string, podID string, container string) (io.ReadCloser, error) {
+func GetLogs(client kubernetes.Interface, namespace string, podID string, container string) (string, error) {
 	logOptions := &v1.PodLogOptions{
 		Container:  container,
-		Follow:     true,
-		Timestamps: true,
+		Follow:     false,
+		Timestamps: false,
 	}
-	logStream, err := openStream(client, namespace, podID, logOptions)
-	return logStream, err
+	readCloser, err := openStream(client, namespace, podID, logOptions)
+
+	if err != nil {
+		return err.Error(), nil
+	}
+
+	defer readCloser.Close()
+
+	result, err := ioutil.ReadAll(readCloser)
+	if err != nil {
+		return "", err
+	}
+
+	return string(result), nil
+}
+
+func StreamLogs(client kubernetes.Interface, namespace string, podID string, container string) (io.ReadCloser, error) {
+	logOptions := &v1.PodLogOptions{
+		Container:  container,
+		Follow:     false,
+		Timestamps: false,
+	}
+	readCloser, err := openStream(client, namespace, podID, logOptions)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return readCloser, nil
 }

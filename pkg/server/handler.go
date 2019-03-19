@@ -3,11 +3,12 @@ package server
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
+	"time"
+
+	debug "log"
 
 	"github.com/kubeapps/common/response"
-	"k8s.io/klog/glog"
 
 	"github.com/gorilla/mux"
 	"github.com/lrx0014/log-tools/pkg/log"
@@ -43,17 +44,88 @@ func (s *APIServer) getLogs(w http.ResponseWriter, request *http.Request, params
 	client, err := log.CreateClient()
 	if err != nil {
 		message := fmt.Sprintf("Unable to create k8s client... => %v\n", err)
-		glog.Error(message)
+		debug.Println(message)
 		response.NewErrorResponse(http.StatusInternalServerError, message).Write(w)
 		return
 	}
 	result, err := log.GetLogs(client, namespace, podID, container)
-	r, _ := ioutil.ReadAll(result)
 	if err != nil {
 		message := fmt.Sprintf("Unable to get log... => %v\n", err)
-		glog.Error(message)
+		debug.Println(message)
 		response.NewErrorResponse(http.StatusInternalServerError, message).Write(w)
 		return
 	}
-	renderer.JSON(w, http.StatusOK, r)
+	renderer.JSON(w, http.StatusOK, result)
+}
+
+func (s *APIServer) streamLogs(w http.ResponseWriter, request *http.Request, params Params) {
+	namespace := params["namespace"]
+	podID := params["pod"]
+	container := params["container"]
+	client, err := log.CreateClient()
+	if err != nil {
+		message := fmt.Sprintf("Unable to create k8s client... => %v\n", err)
+		debug.Println(message)
+		response.NewErrorResponse(http.StatusInternalServerError, message).Write(w)
+		return
+	}
+
+	cn, ok := w.(http.CloseNotifier)
+	if !ok {
+		http.NotFound(w, request)
+		return
+	}
+	flusher, ok := w.(http.Flusher)
+	if !ok {
+		http.NotFound(w, request)
+		return
+	}
+
+	content, err := log.StreamLogs(client, namespace, podID, container)
+	if err != nil {
+		message := fmt.Sprintf("Unable to get log... => %v\n", err)
+		debug.Println(message)
+		response.NewErrorResponse(http.StatusInternalServerError, message).Write(w)
+		return
+	}
+
+	defer content.Close()
+
+	// Send the initial headers saying we're gonna stream the response.
+	w.Header().Set("Transfer-Encoding", "chunked")
+	w.WriteHeader(http.StatusOK)
+	flusher.Flush()
+
+	for {
+		select {
+		case <-cn.CloseNotify():
+			debug.Println("Client stopped listening")
+			return
+		default:
+			/*
+				result, err := ioutil.ReadAll(content)
+				if err != nil {
+					message := fmt.Sprintf("Unable to read all logs: %v", err)
+					response.NewErrorResponse(http.StatusInternalServerError, message).Write(w)
+					return
+				}
+				debug.Printf("log: %s\n", string(result))
+			*/
+			time.Sleep(2 * time.Second)
+			// Send some data.
+			var buf []byte
+			n, err := content.Read(buf)
+			if err != nil {
+				message := fmt.Sprintf("Unable to stream logs: %v", err)
+				response.NewErrorResponse(http.StatusInternalServerError, message).Write(w)
+				return
+			}
+
+			debug.Printf("Sending some data: %d", n)
+
+			w.Write(buf)
+
+			flusher.Flush()
+		}
+	}
 }
