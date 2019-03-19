@@ -7,6 +7,7 @@ import (
 
 	v1 "k8s.io/api/core/v1"
 
+	"github.com/lrx0014/log-tools/pkg/api"
 	kubeutil "github.com/lrx0014/log-tools/pkg/util/kube"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -58,13 +59,13 @@ func openStream(client kubernetes.Interface, namespace, podID string, logOptions
 		VersionedParams(logOptions, scheme.ParameterCodec).Stream()
 }
 
-func GetLogs(client kubernetes.Interface, namespace string, podID string, container string) (string, error) {
+func GetLogs(client kubernetes.Interface, instance *api.ContainerInfo) (string, error) {
 	logOptions := &v1.PodLogOptions{
-		Container:  container,
+		Container:  instance.Container,
 		Follow:     false,
 		Timestamps: false,
 	}
-	readCloser, err := openStream(client, namespace, podID, logOptions)
+	readCloser, err := openStream(client, instance.Namespace, instance.PodID, logOptions)
 
 	if err != nil {
 		return err.Error(), nil
@@ -80,13 +81,13 @@ func GetLogs(client kubernetes.Interface, namespace string, podID string, contai
 	return string(result), nil
 }
 
-func StreamLogs(client kubernetes.Interface, namespace string, podID string, container string) (io.ReadCloser, error) {
+func StreamLogs(client kubernetes.Interface, instance *api.ContainerInfo) (io.ReadCloser, error) {
 	logOptions := &v1.PodLogOptions{
-		Container:  container,
+		Container:  instance.Container,
 		Follow:     true,
 		Timestamps: false,
 	}
-	readCloser, err := openStream(client, namespace, podID, logOptions)
+	readCloser, err := openStream(client, instance.Namespace, instance.PodID, logOptions)
 
 	if err != nil {
 		return nil, err

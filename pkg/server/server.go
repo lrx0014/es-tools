@@ -44,8 +44,7 @@ func (s *APIServer) setupRoutes() http.Handler {
 	// Routes
 	apiv1 := r.PathPrefix("/v1").Subrouter()
 
-	apiv1.Methods("GET").Path("/namespace/{namespace}/pod/{pod}/container/{container}/log").Handler(WithParams(s.getLogs))
-	apiv1.Methods("GET").Path("/namespace/{namespace}/pod/{pod}/container/{container}/stream").Handler(WithParams(s.streamLogs))
+	apiv1.Methods("GET").Path("/namespace/{namespace}/pod/{pod}/container/{container}/log").Handler(WithParams(s.handleLogs))
 
 	n := negroni.Classic()
 	n.UseHandler(r)

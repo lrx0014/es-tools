@@ -5,12 +5,14 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 
 	"github.com/golang/glog"
 
 	"github.com/kubeapps/common/response"
 
 	"github.com/gorilla/mux"
+	"github.com/lrx0014/log-tools/pkg/api"
 	"github.com/lrx0014/log-tools/pkg/log"
 	"github.com/unrolled/render"
 )
@@ -37,10 +39,22 @@ func bind(request *http.Request, obj interface{}) error {
 	return decoder.Decode(obj)
 }
 
-func (s *APIServer) getLogs(w http.ResponseWriter, request *http.Request, params Params) {
-	namespace := params["namespace"]
-	podID := params["pod"]
-	container := params["container"]
+func (s *APIServer) handleLogs(w http.ResponseWriter, request *http.Request, params Params) {
+	keyword := request.URL.Query()["keyword"]
+	if len(keyword) > 0 {
+		s.searchLogs(w, request, params)
+	} else {
+		s.streamLogs(w, request, params)
+	}
+}
+
+func (s *APIServer) searchLogs(w http.ResponseWriter, request *http.Request, params Params) {
+	instance := &api.ContainerInfo{
+		Namespace: params["namespace"],
+		PodID:     params["pod"],
+		Container: params["container"],
+	}
+	keyword := request.URL.Query()["keyword"][0]
 	client, err := log.CreateClient()
 	if err != nil {
 		message := fmt.Sprintf("Unable to create k8s client... => %v\n", err)
@@ -48,20 +62,30 @@ func (s *APIServer) getLogs(w http.ResponseWriter, request *http.Request, params
 		response.NewErrorResponse(http.StatusInternalServerError, message).Write(w)
 		return
 	}
-	result, err := log.GetLogs(client, namespace, podID, container)
+	result, err := log.GetLogs(client, instance)
 	if err != nil {
 		message := fmt.Sprintf("Unable to get log... => %v\n", err)
 		glog.Errorln(message)
 		response.NewErrorResponse(http.StatusInternalServerError, message).Write(w)
 		return
 	}
-	renderer.JSON(w, http.StatusOK, result)
+	res := ""
+	lines := strings.Split(result, "\n")
+	for _, line := range lines {
+		if strings.Contains(line, keyword) {
+			rep := strings.ReplaceAll(line, keyword, "<mark>"+keyword+"</mark>")
+			res += rep + "\n"
+		}
+	}
+	renderer.JSON(w, http.StatusOK, res)
 }
 
 func (s *APIServer) streamLogs(w http.ResponseWriter, request *http.Request, params Params) {
-	namespace := params["namespace"]
-	podID := params["pod"]
-	container := params["container"]
+	instance := &api.ContainerInfo{
+		Namespace: params["namespace"],
+		PodID:     params["pod"],
+		Container: params["container"],
+	}
 	client, err := log.CreateClient()
 	if err != nil {
 		message := fmt.Sprintf("Unable to create k8s client... => %v\n", err)
@@ -81,7 +105,7 @@ func (s *APIServer) streamLogs(w http.ResponseWriter, request *http.Request, par
 		return
 	}
 
-	content, err := log.StreamLogs(client, namespace, podID, container)
+	content, err := log.StreamLogs(client, instance)
 	if err != nil {
 		message := fmt.Sprintf("Unable to get log... => %v\n", err)
 		glog.Errorln(message)
