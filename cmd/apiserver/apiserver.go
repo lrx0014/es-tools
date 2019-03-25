@@ -11,6 +11,7 @@ import (
 	"k8s.io/apiserver/pkg/util/logs"
 
 	"github.com/lrx0014/log-tools/cmd/apiserver/app"
+	"github.com/lrx0014/log-tools/pkg/es"
 )
 
 func main() {
@@ -20,6 +21,8 @@ func main() {
 
 	logs.InitLogs()
 	defer logs.FlushLogs()
+
+	es.PrintVersion()
 
 	flag.CommandLine.Parse([]string{})
 

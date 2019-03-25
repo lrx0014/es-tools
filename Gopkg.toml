@@ -59,19 +59,19 @@
 
 [[constraint]]
   name = "k8s.io/api"
-  version = "kubernetes-1.10.0"
+  version = "kubernetes-1.10.13"
 
 [[constraint]]
-  version = "kubernetes-1.10.0"
+  version = "kubernetes-1.10.13"
   name = "k8s.io/apimachinery"
 
 [[constraint]]
   name = "k8s.io/apiserver"
-  version = "kubernetes-1.10.0"
+  version = "kubernetes-1.10.13"
 
 [[constraint]]
   name = "k8s.io/client-go"
-  version = "kubernetes-1.10.0"
+  version = "kubernetes-1.10.13"
 
 [[constraint]]
   name = "k8s.io/klog"
@@ -80,3 +80,11 @@
 [prune]
   go-tests = true
   unused-packages = true
+
+[[constraint]]
+  name = "github.com/olivere/elastic"
+  version = "6.2.16"
+
+[[constraint]]
+  name = "gopkg.in/olivere/elastic.v5"
+  version = "5.0.79"

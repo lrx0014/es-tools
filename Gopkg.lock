@@ -274,9 +274,10 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:df495c9184b4e6cbb9d55652236dbcbe72c65a1c8b6469da50722628cea474e7"
+  digest = "1:b8774f0cf1c719f5253e92f1fc7880b4186046064c3c23ead99ab568028a6510"
   name = "github.com/mailru/easyjson"
   packages = [
+    ".",
     "buffer",
     "jlexer",
     "jwriter",
@@ -314,6 +315,14 @@
   packages = ["."]
   pruneopts = "UT"
   revision = "ca53cad383cad2479bbba7f7a1a05797ec1386e4"
+
+[[projects]]
+  digest = "1:cf31692c14422fa27c83a05292eb5cbe0fb2775972e8f1f8446a71549bd8980b"
+  name = "github.com/pkg/errors"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "ba968bfe8b2f7e042a574c888954fccecfa385b4"
+  version = "v0.8.1"
 
 [[projects]]
   branch = "master"
@@ -510,6 +519,18 @@
   version = "v0.9.0"
 
 [[projects]]
+  digest = "1:d71c944662848a1da05e9da502b4141c710325cfc6403e795d415baeaa499795"
+  name = "gopkg.in/olivere/elastic.v5"
+  packages = [
+    ".",
+    "config",
+    "uritemplates",
+  ]
+  pruneopts = "UT"
+  revision = "2a49cd32474903f20e8a6c2feae0f37e0e5a74cd"
+  version = "v5.0.79"
+
+[[projects]]
   digest = "1:fa62cd569ff15e4dba6dfc6d826e97a7913ef299eccd5804c9d614a84863e485"
   name = "gopkg.in/yaml.v2"
   packages = ["."]
@@ -517,7 +538,7 @@
   revision = "670d4cfef0544295bc27a114dbac37980d83185a"
 
 [[projects]]
-  digest = "1:0c6fdb651f6eed551609ea9a851728e018beaf45e6f058a848e853803da5c737"
+  digest = "1:bba0cdf51e33cff4449ed760eccb0d97783f09edc5ed91048d4c730fe7c404ef"
   name = "k8s.io/api"
   packages = [
     "admission/v1beta1",
@@ -551,11 +572,11 @@
     "storage/v1beta1",
   ]
   pruneopts = "UT"
-  revision = "73d903622b7391f3312dcbac6483fed484e185f8"
-  version = "kubernetes-1.10.0"
+  revision = "c89978d5f86d7427bef2fc7752732c8c60b1d188"
+  version = "kubernetes-1.10.13"
 
 [[projects]]
-  digest = "1:cb06f529b787bb0ee2178b9733ab71a04add4f4b149395cfd9f08cf4c05ace3a"
+  digest = "1:c06114a2cc674d412d5e0c92e13f9cf5aa0e0ff11509a6992523bc7f4c80b65f"
   name = "k8s.io/apimachinery"
   packages = [
     "pkg/api/equality",
@@ -611,11 +632,11 @@
     "third_party/forked/golang/reflect",
   ]
   pruneopts = "UT"
-  revision = "302974c03f7e50f16561ba237db776ab93594ef6"
-  version = "kubernetes-1.10.0"
+  revision = "d49e237a2683fa6dc43a86c7b1b766e0219fb6e7"
+  version = "kubernetes-1.10.13"
 
 [[projects]]
-  digest = "1:78aa6b949fd9d6bea43bbcfcdb688d2c56fc1b1c5543f8eac6d5e6ff51602ff9"
+  digest = "1:07b54fc64917c2cc508a26b0d78300b21f430a1b9a2bef8b2ef135642c1abeff"
   name = "k8s.io/apiserver"
   packages = [
     "pkg/admission",
@@ -697,11 +718,11 @@
     "plugin/pkg/authorizer/webhook",
   ]
   pruneopts = "UT"
-  revision = "5ae41ac86efd753e2ba012f097b83a914b268236"
-  version = "kubernetes-1.10.0"
+  revision = "30d6a91f580b7a2a240dccebc1a35bff2a6940f6"
+  version = "kubernetes-1.10.13"
 
 [[projects]]
-  digest = "1:c8dca44b43865b4d23a4532965d9e51ea036f24a1135ae50a39dec193828e75b"
+  digest = "1:899b2f6b62072d8cfdf1d953b87b6b32ede2bccca2033704715c9d8aa4496d13"
   name = "k8s.io/client-go"
   packages = [
     "discovery",
@@ -823,8 +844,8 @@
     "util/retry",
   ]
   pruneopts = "UT"
-  revision = "23781f4d6632d88e869066eaebb743857aa1ef9b"
-  version = "kubernetes-1.10.0"
+  revision = "36368dede29baa5ecd253416d70ddc0c76bde69b"
+  version = "kubernetes-1.10.13"
 
 [[projects]]
   digest = "1:93153ae93df78ae288f0b601122f2a784df3187c9b3fae45c5960a36b52aa771"
@@ -862,6 +883,7 @@
     "github.com/spf13/pflag",
     "github.com/unrolled/render",
     "github.com/urfave/negroni",
+    "gopkg.in/olivere/elastic.v5",
     "k8s.io/api/core/v1",
     "k8s.io/apimachinery/pkg/util/errors",
     "k8s.io/apimachinery/pkg/version",
