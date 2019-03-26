@@ -13,6 +13,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/lrx0014/log-tools/pkg/api"
+	"github.com/lrx0014/log-tools/pkg/es"
 	"github.com/lrx0014/log-tools/pkg/log"
 	"github.com/unrolled/render"
 )
@@ -46,6 +47,19 @@ func (s *APIServer) handleLogs(w http.ResponseWriter, request *http.Request, par
 	} else {
 		s.streamLogs(w, request, params)
 	}
+}
+
+func (s *APIServer) handlerListPods(w http.ResponseWriter, request *http.Request, params Params) {
+	namespace := params["namespace"]
+	container := params["container"]
+	podlist, err := es.GetPodListFromES(namespace, container)
+	if err != nil {
+		message := fmt.Sprintf("Unable to get pod list from es... => %v\n", err)
+		glog.Errorln(message)
+		response.NewErrorResponse(http.StatusInternalServerError, message).Write(w)
+		return
+	}
+	renderer.JSON(w, http.StatusOK, podlist)
 }
 
 func (s *APIServer) searchLogs(w http.ResponseWriter, request *http.Request, params Params) {

@@ -22,9 +22,9 @@ func main() {
 	logs.InitLogs()
 	defer logs.FlushLogs()
 
-	es.PrintVersion()
-
 	flag.CommandLine.Parse([]string{})
+
+	es.PrintVersion()
 
 	if err := command.Execute(); err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
