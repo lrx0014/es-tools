@@ -67,7 +67,7 @@ func updatePodStatus(k8sClient kubernetes.Interface, namespace string, podlist *
 	for i := 0; i < len(podlist.List); i++ {
 		_, err := k8sClient.CoreV1().Pods(namespace).Get(podlist.List[i].PodName, metav1.GetOptions{})
 		if err != nil {
-			log.Fatalf("Unable to get pod info from kubernetes: %v \n", err)
+			log.Printf("Unable to get pod info from kubernetes: %v \n", err)
 			break
 		}
 		podlist.List[i].Status = "Running"
