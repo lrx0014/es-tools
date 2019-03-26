@@ -48,9 +48,9 @@ func GetPodList(k8sClient kubernetes.Interface, namespace string, container stri
 	var pods []PodInfo
 
 	for _, line := range res.Hits.Hits {
-		podname := line.Fields["kubernetes.pod_name"]
+		podname := line.Fields["kubernetes.pod_name"].([]interface{})[0].(string)
 		podinfo := PodInfo{
-			PodName: string(podname.([]string)[0]),
+			PodName: podname,
 			Status:  "Log_Persistent_in_ES",
 		}
 		pods = append(pods, podinfo)
@@ -73,4 +73,11 @@ func updatePodStatus(k8sClient kubernetes.Interface, namespace string, podlist *
 		podlist.List[i].Status = "Running"
 	}
 	return nil
+}
+
+func convertInterfaceArrayToStringArray(input interface{}) (output []string) {
+	for _, temp := range input.([]interface{}) {
+		output = append(output, temp.(string))
+	}
+	return output
 }
