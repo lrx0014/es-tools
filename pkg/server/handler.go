@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"strings"
 
 	"github.com/golang/glog"
 
@@ -41,18 +40,20 @@ func bind(request *http.Request, obj interface{}) error {
 }
 
 func (s *APIServer) handleLogs(w http.ResponseWriter, request *http.Request, params Params) {
-	keyword := request.URL.Query()["keyword"]
-	if len(keyword) > 0 {
-		s.searchLogs(w, request, params)
-	} else {
-		s.streamLogs(w, request, params)
-	}
+	s.streamLogs(w, request, params)
 }
 
 func (s *APIServer) handlerListPods(w http.ResponseWriter, request *http.Request, params Params) {
 	namespace := params["namespace"]
 	container := params["container"]
-	podlist, err := es.GetPodListFromES(namespace, container)
+	k8sClient, err := log.CreateClient()
+	if err != nil {
+		message := fmt.Sprintf("Unable to create k8s client... => %v\n", err)
+		glog.Errorln(message)
+		response.NewErrorResponse(http.StatusInternalServerError, message).Write(w)
+		return
+	}
+	podlist, err := es.GetPodList(k8sClient, namespace, container)
 	if err != nil {
 		message := fmt.Sprintf("Unable to get pod list from es... => %v\n", err)
 		glog.Errorln(message)
@@ -60,38 +61,6 @@ func (s *APIServer) handlerListPods(w http.ResponseWriter, request *http.Request
 		return
 	}
 	renderer.JSON(w, http.StatusOK, podlist)
-}
-
-func (s *APIServer) searchLogs(w http.ResponseWriter, request *http.Request, params Params) {
-	instance := &api.ContainerInfo{
-		Namespace: params["namespace"],
-		PodID:     params["pod"],
-		Container: params["container"],
-	}
-	keyword := request.URL.Query()["keyword"][0]
-	client, err := log.CreateClient()
-	if err != nil {
-		message := fmt.Sprintf("Unable to create k8s client... => %v\n", err)
-		glog.Errorln(message)
-		response.NewErrorResponse(http.StatusInternalServerError, message).Write(w)
-		return
-	}
-	result, err := log.GetLogs(client, instance)
-	if err != nil {
-		message := fmt.Sprintf("Unable to get log... => %v\n", err)
-		glog.Errorln(message)
-		response.NewErrorResponse(http.StatusInternalServerError, message).Write(w)
-		return
-	}
-	res := ""
-	lines := strings.Split(result, "\n")
-	for _, line := range lines {
-		if strings.Contains(line, keyword) {
-			rep := strings.ReplaceAll(line, keyword, "<mark>"+keyword+"</mark>")
-			res += rep + "\n"
-		}
-	}
-	renderer.JSON(w, http.StatusOK, res)
 }
 
 func (s *APIServer) streamLogs(w http.ResponseWriter, request *http.Request, params Params) {

@@ -2,10 +2,11 @@ package es
 
 import (
 	"context"
-	"encoding/json"
 	"log"
 
 	elastic "gopkg.in/olivere/elastic.v5"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
 )
 
 type PodInfo struct {
@@ -17,7 +18,7 @@ type PodList struct {
 	List []PodInfo `json:"list"`
 }
 
-func GetPodListFromES(namespace string, container string) (*PodList, error) {
+func GetPodList(k8sClient kubernetes.Interface, namespace string, container string) (*PodList, error) {
 	connInfo := getConfigFromEnv()
 	esClient, err := CreateESClient(connInfo)
 	if err != nil {
@@ -25,7 +26,7 @@ func GetPodListFromES(namespace string, container string) (*PodList, error) {
 		return nil, err
 	}
 
-	collapse := elastic.NewCollapseBuilder("kubernetes.pod_name.keyword")
+	collapse := elastic.NewCollapseBuilder("kubernetes.pod_name")
 
 	q := elastic.NewBoolQuery().
 		Must(elastic.NewTermQuery("kubernetes.namespace_name", namespace)).
@@ -33,20 +34,12 @@ func GetPodListFromES(namespace string, container string) (*PodList, error) {
 
 	res, err := esClient.Search().
 		Query(q).
+		Sort("@timestamp", false).
 		Collapse(collapse).
 		Do(context.Background())
 
 	if err != nil {
-		src, err := q.Source()
-		if err != nil {
-			log.Fatalln(err)
-		}
-		data, err := json.Marshal(src)
-		if err != nil {
-			log.Fatalf("marshaling to JSON failed: %v", err)
-		}
-		got := string(data)
-		log.Fatalln(got)
+		log.Fatalln(err)
 		return nil, err
 	}
 
@@ -55,9 +48,9 @@ func GetPodListFromES(namespace string, container string) (*PodList, error) {
 	var pods []PodInfo
 
 	for _, line := range res.Hits.Hits {
-		podname := line.Fields["kubernetes.pod_name.keyword"].(string)
+		podname := line.Fields["kubernetes.pod_name"]
 		podinfo := PodInfo{
-			PodName: podname,
+			PodName: string(podname.([]string)[0]),
 			Status:  "Log_Persistent_in_ES",
 		}
 		pods = append(pods, podinfo)
@@ -65,5 +58,19 @@ func GetPodListFromES(namespace string, container string) (*PodList, error) {
 
 	podlist.List = pods
 
+	updatePodStatus(k8sClient, namespace, podlist)
+
 	return podlist, nil
+}
+
+func updatePodStatus(k8sClient kubernetes.Interface, namespace string, podlist *PodList) error {
+	for i := 0; i < len(podlist.List); i++ {
+		_, err := k8sClient.CoreV1().Pods(namespace).Get(podlist.List[i].PodName, metav1.GetOptions{})
+		if err != nil {
+			log.Fatalf("Unable to get pod info from kubernetes: %v \n", err)
+			return err
+		}
+		podlist.List[i].Status = "Running"
+	}
+	return nil
 }
