@@ -68,16 +68,9 @@ func updatePodStatus(k8sClient kubernetes.Interface, namespace string, podlist *
 		_, err := k8sClient.CoreV1().Pods(namespace).Get(podlist.List[i].PodName, metav1.GetOptions{})
 		if err != nil {
 			log.Fatalf("Unable to get pod info from kubernetes: %v \n", err)
-			return err
+			break
 		}
 		podlist.List[i].Status = "Running"
 	}
 	return nil
-}
-
-func convertInterfaceArrayToStringArray(input interface{}) (output []string) {
-	for _, temp := range input.([]interface{}) {
-		output = append(output, temp.(string))
-	}
-	return output
 }
